@@ -1,0 +1,36 @@
+train_net: "jobs_actions_org/train.prototxt"
+#test_net: "jobs_actions_org/SSD_512x512_score/test.prototxt"
+#test_net: "jobs_actions_org/SSD_512x512_score/benchmark.prototxt"
+test_net: "jobs_actions_org/SSD_512x512_score/train.prototxt"
+test_iter: 1748
+test_interval: 10
+base_lr: 0.0001
+display: 10
+max_iter: 0
+lr_policy: "multistep"
+gamma: 0.5
+momentum: 0.9
+weight_decay: 0.0005
+stepvalue: 10000
+stepvalue: 20000
+stepvalue: 40000
+stepvalue: 80000
+stepvalue: 100000
+stepvalue: 120000
+stepvalue: 140000
+snapshot: 1000
+snapshot_prefix: "jobs_actions_org/VGG_SSD_512x512"
+solver_mode: GPU
+#device_id: 0
+debug_info: false
+snapshot_after_train: true
+test_initialization: false
+average_loss: 10
+iter_size: 1
+type: "SGD"
+eval_type: "detection"
+ap_version: "11point"
+show_per_class_result:true
+
+
+

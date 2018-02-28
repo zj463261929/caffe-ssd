@@ -1,0 +1,25 @@
+item {
+  name: "none_of_the_above"
+  label: 0
+  display_name: "background"
+}
+item {
+  name: "handsup"
+  label: 1
+  display_name: "handsup"
+}
+item {
+  name: "like"
+  label: 2
+  display_name: "like"
+}
+item {
+  name: "hate"
+  label: 3
+  display_name: "hate"
+}
+item {
+  name: "sleep"
+  label: 4
+  display_name: "sleep"
+}
