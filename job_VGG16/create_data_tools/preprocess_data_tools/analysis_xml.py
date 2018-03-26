@@ -70,8 +70,8 @@ class xml_info(object):
 						w = x2 - x1 + 0.0
 						h = y2 - y1 + 0.0
 						if (h>5 and w>5):
-							w = w*self.input_width/width
-							h = h*self.input_height/height
+							'''w = w*self.input_width/width
+							h = h*self.input_height/height'''
 							
 							class_w_lst.append( w )
 							class_h_lst.append( h )
@@ -138,6 +138,7 @@ class xml_info(object):
 	
 	#将数据分段显示
 	def draw_histogram(self, interval_lst, num_lst, level, filename):
+		plt.clf() 
 		## 'r--'红色的破折号，'bs'蓝色的方块，'g^'绿色的三角形, 'ro' 红色 散点
 		color_lst = ['r', 'g', 'b', 'r--', 'g--', 'b--', 'rs', 'gs', 'bs', 'r^', 'g^', 'b^', 'ro', 'go', 'bo']
 		if level > len(color_lst):
@@ -160,7 +161,6 @@ class xml_info(object):
 				
 			s = "data(" + str(min(lst_x) + interval_lst[i*num1]) + "," + str(max(lst_x) + interval_lst[i*num1]) + ")"
 			plt.plot(lst_x, lst_y, color_lst[i], label=s) #
-
 
 		plt.legend(loc='upper right', shadow=True, fontsize='x-large')# make legend
 
@@ -204,15 +204,15 @@ class xml_info(object):
 ##############################################################################################
 #主函数
 class_name_lst = ["handsup", "like", "hate", "sleep"] #类别名称, 	改
-input_width = 860	#训练网络结构中指定的输入图片宽高，	改
-input_height = 860	#	改
+input_width = 512	#训练网络结构中指定的输入图片宽高，	改
+input_height = 512	#	改
 
 
 folder_path = "/opt/zhangjing/caffe/caffe/data/actions_new/"		#改
 xml_file = open(folder_path + "test2.txt", 'r') 	#改
 #xml_file = open("/opt/zhangjing/caffe/caffe/data/actions_new/" + "test.txt", 'r') 	#改
 lines = xml_file.readlines()
-print ("file path: ", folder_path + "benchmark_test.txt")
+print ("file path: ", folder_path + "benchmark.txt")
 
 c = xml_info(input_width, input_height, class_name_lst)
 
@@ -297,8 +297,11 @@ c.draw_histogram(interval_lst, num_lst, 3, "dutyRatio.png") #以图的形式展�
 
 #以一定间隔为单位来统计面积或宽高比的直方图
 interval_lst, num_lst = c.get_histogram(all_area_lst, interval=20) #(ratio_lst, 0.05)
-c.draw_histogram(interval_lst, num_lst, 7, "area.png") #以图的形式展示出来，interval_lst为x坐标（面积或宽高比的大小），num_lst为y轴（面积或宽高比的个数）
+c.draw_histogram(interval_lst, num_lst, 3, "area.png") #以图的形式展示出来，interval_lst为x坐标（面积或宽高比的大小），num_lst为y轴（面积或宽高比的个数）
 
+#以一定间隔为单位来统计面积或宽高比的直方图
+interval_lst, num_lst = c.get_histogram(all_ratio_lst, interval=0.05) #(ratio_lst, 0.05)
+c.draw_histogram(interval_lst, num_lst, 3, "whRatio.png") #以图的形式展示出来，interval_lst为x坐标（面积或宽高比的大小），num_lst为y轴（面积或宽高比的个数）
 
 '''
 #统计分布
