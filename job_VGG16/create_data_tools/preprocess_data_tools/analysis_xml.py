@@ -31,11 +31,12 @@ class xml_info(object):
 		
 		for l in lines:
 			lst = l.strip().split()
-			if 2==len(lst):	#pictures_864/0123030269.jpg labels_864/0123030269.xml
+			if 1==len(lst):	#pictures_864/0123030269.jpg labels_864/0123030269.xml
 				#打开xml文档
-				if not os.path.exists( folder_path+lst[1] ):
+				if not os.path.exists( folder_path+lst[0] ):
 					continue
-				dom = xml.dom.minidom.parse(folder_path+lst[1]) #用于打开一个xml文件，并将这个文件对象dom变量。
+				#print folder_path+lst[1]
+				dom = xml.dom.minidom.parse(folder_path+lst[0]) #用于打开一个xml文件，并将这个文件对象dom变量。
 												
 				root = dom.documentElement #用于得到dom对象的文档元素，并把获得的对象给root
 				
@@ -59,6 +60,7 @@ class xml_info(object):
 						name_lst.append(l)
 								
 				num = min(len(name_lst), len(xmin_lst))
+				#num = len(xmin_lst)
 				# w/h
 				for i in range(num):
 					#print (name_lst[i], class_name)
@@ -70,13 +72,17 @@ class xml_info(object):
 						w = x2 - x1 + 0.0
 						h = y2 - y1 + 0.0
 						if (h>5 and w>5):
-							'''w = w*self.input_width/width
-							h = h*self.input_height/height'''
+							w = w*self.input_width/width
+							h = h*self.input_height/height
 							
+							'''ratio = w/h
+							if ratio>20:
+								print folder_path+lst[1]
+								print (x1,x2,y1,y2,w,h)'''
 							class_w_lst.append( w )
 							class_h_lst.append( h )
 						else:
-							print ("error xml: ", lst[1], y2, y1, x1, x2)
+							print ("error xml: ", lst[0], y2, y1, x1, x2)
 					
 		return (class_w_lst, class_h_lst)
 	
@@ -173,46 +179,55 @@ class xml_info(object):
 
 	def get_anchor_info(self, ratio_interval, area_interval, area_lst, ratio_lst):
 		if ratio_interval[0] > min(ratio_lst):
-			ratio_interval.insert(0, int(min(ratio_lst)*100)/100.0 - 1.0)
+			#ratio_interval.insert(0, int(min(ratio_lst)*100)/100.0 - 1.0)
+			ratio_interval[0] = int(min(ratio_lst)*100)/100.0 - 0.05
+		#print min(ratio_lst)
+		#print ratio_interval
 		num = len(ratio_interval)
 		if ratio_interval[num-1] < max(ratio_lst):
-			ratio_interval.insert(num, int(max(ratio_lst)*100)/100.0 + 1.0)
+			#ratio_interval.insert(num, int(max(ratio_lst)*100)/100.0 + 1.0)
+			ratio_interval[num-1] = int(max(ratio_lst)*100)/100.0 + 1.0
 		
 		#print (area_interval)
 		if area_interval[0] > min(area_lst):
-			area_interval.insert(0, int(min(area_lst)*100)/100.0 - 1.0)
+			#area_interval.insert(0, int(min(area_lst)*100)/100.0 - 1.0)
+			area_interval[0] = int(min(area_lst)*100)/100.0 - 0.05
 		num = len(area_interval)
 		if area_interval[num-1] < max(area_lst):
-			area_interval.insert(num, int(max(area_lst)*100)/100.0 + 1.0)
+			#area_interval.insert(num, int(max(area_lst)*100)/100.0 + 1.0)
+			area_interval[num-1] = int(max(area_lst)*100)/100.0 + 1.0
 		#print (area_interval)
 		
-		level = len(area_interval) - 1
+		rows = len(area_interval) - 1
 		cols = len(ratio_interval) - 1
-		num_arr = np.zeros( (level, cols) )
+		num_arr = np.zeros( (rows, cols) )
 		for ii in range( len(ratio_lst) ):
 			area = int(area_lst[ii]*100)/100.0 
 			ratio = int(ratio_lst[ii]*100)/100.0  #保留2位小数点
 			
-			for row in range(level):
+			for row in range(rows):
 				for col in range(cols):		
 					if ( area>=area_interval[row] and area<area_interval[row+1]):
 						if (ratio >=ratio_interval[col] and ratio<ratio_interval[col+1]):
 							num_arr[row][col] = num_arr[row][col] + 1
+	
 			
 		return (num_arr, ratio_interval, area_interval)
 
 ##############################################################################################
 #主函数
-class_name_lst = ["handsup", "like", "hate", "sleep"] #类别名称, 	改
+#class_name_lst = ["autotruck", "crane", "digger", "mixerTruck", "forklift", "colorPlate", "pit", "bricksPile", "mound", "worker", "car"] 
+class_name_lst = ["aeroplane","bicycle","bird","boat","bottle","bus","car","cat","chair","cow","diningtable","dog","horse","motorbike","person","pottedplant","sheep","sofa","train","tvmonitor"]
+				#["handsup", "like", "hate", "sleep"] #类别名称, 	改
 input_width = 512	#训练网络结构中指定的输入图片宽高，	改
 input_height = 512	#	改
 
 
-folder_path = "/opt/zhangjing/caffe/caffe/data/actions_new/"		#改
-xml_file = open(folder_path + "test2.txt", 'r') 	#改
+folder_path = "/opt/zhangjing/caffe/caffe/data/VOC0712/VOC2007/Annotations/"		#改
+xml_file = open("/opt/zhangjing/caffe/caffe/data/VOC0712/VOC2007/xml.txt", 'r') 	#改
 #xml_file = open("/opt/zhangjing/caffe/caffe/data/actions_new/" + "test.txt", 'r') 	#改
 lines = xml_file.readlines()
-print ("file path: ", folder_path + "benchmark.txt")
+#print ("file path: ", folder_path + "benchmark.txt")
 
 c = xml_info(input_width, input_height, class_name_lst)
 
@@ -220,69 +235,39 @@ all_w_lst = []
 all_h_lst = []
 all_area_lst = []
 all_ratio_lst = []
+all_num_lst = []
 
-#handsup class
-w_lst, h_lst = c.getBoxBasicInfo(lines, folder_path, "handsup") #改 "handsup"
-area_lst, ratio_lst = c.getBoxAreaRatio(w_lst, h_lst)	#某个类别的宽高比、面积
-if len(w_lst)>0:
-	print ("handsup box info: ")
-	print ("num = ", len(w_lst))
-	print ("(minW,minH,maxW,maxH)=", int(min(w_lst)*100)/100.0, int(min(h_lst)*100)/100.0, int(max(w_lst)*100)/100.0, int(max(h_lst)*100)/100.0)
-	print ("(minArea, maxArea)=", int(min(area_lst)*100)/100.0, int(max(area_lst)*100)/100.0)
-	print ("(minRatio, maxRatio)=\n", int(min(ratio_lst)*100)/100.0, int(max(ratio_lst)*100)/100.0)
-	all_w_lst = all_w_lst + w_lst
-	all_h_lst = all_h_lst + h_lst
-	all_area_lst = all_area_lst + area_lst
-	all_ratio_lst = all_ratio_lst + ratio_lst	
+for i in range(len(class_name_lst)):
+	class_name = class_name_lst[i].strip()
+	w_lst, h_lst = c.getBoxBasicInfo(lines, folder_path, class_name) #改 "handsup"
+	area_lst, ratio_lst = c.getBoxAreaRatio(w_lst, h_lst)	#某个类别的宽高比、面积
+	#print len(w_lst)
+	
+	if len(w_lst)>0:
+		print (" %s box info: ", class_name)
+		print ("num = ", len(w_lst))
+		print ("(minW,minH,maxW,maxH)=", int(min(w_lst)*100)/100.0, int(min(h_lst)*100)/100.0, int(max(w_lst)*100)/100.0, int(max(h_lst)*100)/100.0)
+		print ("(minArea, maxArea)=", int(min(area_lst)*100)/100.0, int(max(area_lst)*100)/100.0)
+		print ("(minRatio, maxRatio)=\n", int(min(ratio_lst)*100)/100.0, int(max(ratio_lst)*100)/100.0)
+		all_w_lst = all_w_lst + w_lst
+		all_h_lst = all_h_lst + h_lst
+		all_area_lst = all_area_lst + area_lst
+		all_ratio_lst = all_ratio_lst + ratio_lst
+		all_num_lst.append(len(w_lst))
+		print "\n"
 
-#like class
-w_lst, h_lst = c.getBoxBasicInfo(lines, folder_path, "like")
-area_lst, ratio_lst = c.getBoxAreaRatio(w_lst, h_lst)	#某个类别的宽高比、面积
-if len(w_lst)>0:
-	print ("like box info: ")
-	print ("num = ", len(w_lst))
-	print ("(minW,minH,maxW,maxH)=", int(min(w_lst)*100)/100.0, int(min(h_lst)*100)/100.0, int(max(w_lst)*100)/100.0, int(max(h_lst)*100)/100.0)
-	print ("(minArea, maxArea)=", int(min(area_lst)*100)/100.0, int(max(area_lst)*100)/100.0)
-	print ("(minRatio, maxRatio)=\n", int(min(ratio_lst)*100)/100.0, int(max(ratio_lst)*100)/100.0)
-	all_w_lst = all_w_lst + w_lst
-	all_h_lst = all_h_lst + h_lst
-	all_area_lst = all_area_lst + area_lst
-	all_ratio_lst = all_ratio_lst + ratio_lst	
-
-#hate class
-w_lst, h_lst = c.getBoxBasicInfo(lines, folder_path, "hate")
-area_lst, ratio_lst = c.getBoxAreaRatio(w_lst, h_lst)	#某个类别的宽高比、面积
-if len(w_lst)>0:
-	print ("hate box info: ")
-	print ("num = ", len(w_lst))
-	print ("(minW,minH,maxW,maxH)=", int(min(w_lst)*100)/100.0, int(min(h_lst)*100)/100.0, int(max(w_lst)*100)/100.0, int(max(h_lst)*100)/100.0)
-	print ("(minArea, maxArea)=", int(min(area_lst)*100)/100.0, int(max(area_lst)*100)/100.0)
-	print ("(minRatio, maxRatio)=\n", int(min(ratio_lst)*100)/100.0, int(max(ratio_lst)*100)/100.0)
-	all_w_lst = all_w_lst + w_lst
-	all_h_lst = all_h_lst + h_lst
-	all_area_lst = all_area_lst + area_lst
-	all_ratio_lst = all_ratio_lst + ratio_lst	
-
-#sleep class
-w_lst, h_lst = c.getBoxBasicInfo(lines, folder_path, "sleep")
-area_lst, ratio_lst = c.getBoxAreaRatio(w_lst, h_lst)	#某个类别的宽高比、面积
-if len(w_lst)>0:
-	print ("sleep box info: ")
-	print ("num = ", len(w_lst))
-	print ("(minW,minH,maxW,maxH)=", int(min(w_lst)*100)/100.0, int(min(h_lst)*100)/100.0, int(max(w_lst)*100)/100.0, int(max(h_lst)*100)/100.0)
-	print ("(minArea, maxArea)=", int(min(area_lst)*100)/100.0, int(max(area_lst)*100)/100.0)
-	print ("(minRatio, maxRatio)=\n", int(min(ratio_lst)*100)/100.0, int(max(ratio_lst)*100)/100.0)
-	all_w_lst = all_w_lst + w_lst
-	all_h_lst = all_h_lst + h_lst
-	all_area_lst = all_area_lst + area_lst
-	all_ratio_lst = all_ratio_lst + ratio_lst	
-
-print ("all box info: ")
-print ("num = ", len(all_w_lst))
-print ("(minW,minH,maxW,maxH)=", int(min(all_w_lst)*100)/100.0, int(min(all_h_lst)*100)/100.0, int(max(all_w_lst)*100)/100.0, int(max(all_h_lst)*100)/100.0)
-print ("(minArea, maxArea)=", int(min(all_area_lst)*100)/100.0, int(max(all_area_lst)*100)/100.0)
-print ("(minRatio, maxRatio)=\n", int(min(all_ratio_lst)*100)/100.0, int(max(all_ratio_lst)*100)/100.0)
-
+if len(all_w_lst)>0:
+	print (" all box info: ")
+	print ("num = ", len(all_w_lst))
+	print ("(minW,minH,maxW,maxH)=", int(min(all_w_lst)*100)/100.0, int(min(all_h_lst)*100)/100.0, int(max(all_w_lst)*100)/100.0, int(max(all_h_lst)*100)/100.0)
+	print ("(minArea, maxArea)=", int(min(all_area_lst)*100)/100.0, int(max(all_area_lst)*100)/100.0)
+	print ("(minRatio, maxRatio)=\n", int(min(all_ratio_lst)*100)/100.0, int(max(all_ratio_lst)*100)/100.0)
+	print "\n"
+		
+print "class/all_num:"
+for i in range(len(all_num_lst)):
+	print all_num_lst[i], all_num_lst[i]/(len(all_w_lst)+0.0)*100
+	
 #计算占空比
 dutyRatio_lst = [] #存放所有类别box的占空比
 area = input_width*input_height + 0.0000001
@@ -303,21 +288,23 @@ c.draw_histogram(interval_lst, num_lst, 3, "area.png") #以图的形式展示出
 interval_lst, num_lst = c.get_histogram(all_ratio_lst, interval=0.05) #(ratio_lst, 0.05)
 c.draw_histogram(interval_lst, num_lst, 3, "whRatio.png") #以图的形式展示出来，interval_lst为x坐标（面积或宽高比的大小），num_lst为y轴（面积或宽高比的个数）
 
-'''
+
 #统计分布
-#area_lst = [35.84*35.84, 76.8*76.8, 153.6*153.6, 230.4*230.4, 307.2*307.2, 384.0*384.0, 460.8*460.8, 537.6*537.6] #VGG16 7层
-area_interval = [20.48*20.48, 46.72*46.72, 128.57*128.57, 210.42*210.42, 292.27*292.27, 374.12*374.12, 455.97*455.97, 537.6*537.6]# 改
-ratio_interval = [0.2,0.25,0.33,0.5,0.7,1.0,1.2,1.4,1.6,2.0]	#改
+area_interval = [35.84*35.84, 76.8*76.8, 153.6*153.6, 230.4*230.4, 307.2*307.2, 384.0*384.0, 460.8*460.8, 537.6*537.6] #VOC
+#area_interval = [20.48*20.48, 46.72*46.72, 128.57*128.57, 210.42*210.42, 292.27*292.27, 374.12*374.12, 455.97*455.97, 537.6*537.6]# 改
+#area_interval = [20.48*20.48, 51.2*51.2, 133.12*133.12, 215.04*215.04, 296.96*296.96, 378.88*378.88, 460.8*460.8, 542.72*542.72] #coco
+#ratio_interval = [0.2,0.25,0.33,0.5,0.7,1.0,1.2,1.4,1.6,2.0]	#改
+ratio_interval = [0.2, 0.24, 0.29, 0.8, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5]	#改
 
 #统计面积落入某个面积间隔区域内，同时宽高比也落入某个宽高比间隔区域的个数
-num_arr, ratio_interval, area_interval = c.get_anchor_info(ratio_interval, area_interval, area_lst, ratio_lst)
+num_arr, ratio_interval, area_interval = c.get_anchor_info(ratio_interval, area_interval, all_area_lst, all_ratio_lst)
 print ("area_interval:", area_interval)		
 print ("ratio_interval:", ratio_interval)
 print ("num: ")					#num_arr的列表示ratio_interval
 for row in range(num_arr.shape[0]):	
 	print ( num_arr[row][:])
 #print ("sum: ", np.sum(num_arr))
-'''
+
 xml_file.close()
 
 
